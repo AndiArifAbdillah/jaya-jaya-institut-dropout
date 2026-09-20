@@ -114,7 +114,9 @@ streamlit run app.py
 ```
 Aplikasi akan terbuka di `http://localhost:8501`.
 
-Link prototype (Streamlit Community Cloud): **https://jaya-jaya-institut-dropout.streamlit.app**
+Repository GitHub: https://github.com/AndiArifAbdillah/jaya-jaya-institut-dropout
+
+Link prototype (Streamlit Community Cloud): **https://jaya-jaya-institut-do.streamlit.app**
 
 ## Conclusion
 
