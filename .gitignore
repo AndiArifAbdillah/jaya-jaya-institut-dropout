@@ -1,0 +1,6 @@
+__pycache__/
+.ipynb_checkpoints/
+.venv/
+.dist/
+*.zip
+PANDUAN_VIDEO.md
