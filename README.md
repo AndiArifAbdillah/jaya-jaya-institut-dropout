@@ -141,3 +141,7 @@ Link prototype (Streamlit Community Cloud): **https://jaya-jaya-institut-do.stre
 - **Evaluasi program studi berisiko tinggi.** Lakukan kajian kurikulum, orientasi tahun pertama, dan penguatan bimbingan pada Equinculture, Informatics Engineering, Management (evening), dan Basic Education.
 - **Gunakan dashboard sebagai alat monitoring rutin.** Pimpinan fakultas meninjau dashboard Metabase setiap bulan dan menetapkan target penurunan tingkat dropout (misalnya dari 32% menjadi < 25%) untuk dievaluasi setiap tahun ajaran.
 - **Perkaya data untuk deteksi yang lebih dini.** Kumpulkan data kehadiran, aktivitas LMS, dan nilai tengah semester agar model dapat mendeteksi risiko sebelum semester pertama berakhir, lalu latih ulang model secara berkala dengan data terbaru.
+
+## Materi Belajar
+
+Ingin memahami proyek ini secara mendalam — dari konsep dasar data science (termasuk **apa itu EDA**) sampai setiap keputusan teknis dan bisnisnya? Lihat folder **[`belajar/`](belajar/README.md)**: 12 modul berurutan, glosarium, 12 latihan praktik, 30 soal kuis, dan simulasi pertanyaan review.
