@@ -118,6 +118,8 @@ Repository GitHub: https://github.com/AndiArifAbdillah/jaya-jaya-institut-dropou
 
 Link prototype (Streamlit Community Cloud): **https://jaya-jaya-institut-do.streamlit.app**
 
+> Aplikasi pada Streamlit Community Cloud otomatis "tidur" jika lama tidak diakses. Jika muncul halaman *"This app has gone to sleep due to inactivity"*, klik **Yes, get this app back up!** lalu tunggu ±1 menit hingga aplikasi aktif kembali.
+
 ## Conclusion
 
 1. **Tingkat dropout Jaya Jaya Institut tinggi, yaitu 32,1%** (1.421 dari 4.424 mahasiswa). Hampir 1 dari 3 mahasiswa tidak menyelesaikan pendidikannya.
