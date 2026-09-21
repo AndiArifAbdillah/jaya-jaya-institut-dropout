@@ -33,7 +33,8 @@ Struktur proyek:
 ├── data.csv                      # dataset
 ├── sample_students.csv           # contoh data untuk fitur prediksi batch
 ├── metabase.db.mv.db             # database Metabase (dashboard)
-├── username_dicoding-dashboard.png
+├── andi_arif_abdillah-dashboard.png  # screenshot dashboard
+├── andi_arif_abdillah-video.mp4      # video presentasi (maks. 5 menit)
 ├── requirements.txt
 └── README.md
 ```
@@ -63,7 +64,7 @@ jupyter notebook notebook.ipynb
 
 Dashboard **"Jaya Jaya Institut - Student Performance Dashboard"** dibuat menggunakan **Metabase** dengan sumber data tabel `students` di PostgreSQL (hasil pelabelan pada notebook). Dashboard membantu pihak institusi memahami kondisi mahasiswa dan memonitor faktor-faktor penting yang berkaitan dengan dropout.
 
-![Dashboard](username_dicoding-dashboard.png)
+![Dashboard](andi_arif_abdillah-dashboard.png)
 
 Isi dashboard:
 | Bagian | Visualisasi | Kegunaan |
