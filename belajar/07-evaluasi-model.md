@@ -114,7 +114,7 @@ permutation_importance(best_model, X_test, y_test, scoring="f1", n_repeats=15, r
 
 ## 7.8 Membandingkan dengan model yang lebih "adil" dan lebih dini
 
-Dua eksperimen tambahan (Logistic Regression dengan pengaturan yang sama):
+Dua eksperimen tambahan (Logistic Regression dengan pengaturan yang sama). Varian **semester 1** juga ada di notebook, bagian *Evaluation → 4. Model deteksi dini*:
 
 | Varian | F1 | Recall | ROC-AUC | Kapan dipakai |
 |---|---|---|---|---|

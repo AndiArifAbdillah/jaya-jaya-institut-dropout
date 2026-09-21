@@ -12,7 +12,7 @@ Setiap rekomendasi di README harus bisa ditelusuri ke **bukti data**, dan harus 
 
 | # | Action item | Insight yang mendasari | Cara mengukur keberhasilan |
 |---|---|---|---|
-| 1 | Sistem peringatan dini tiap akhir semester | Model mendeteksi 83% mahasiswa dropout; data semester sangat prediktif | % mahasiswa risiko tinggi yang dihubungi ≤ 2 minggu |
+| 1 | Sistem peringatan dini bertahap (setelah semester 1 → konfirmasi setelah semester 2) | Model utama mendeteksi 83% mahasiswa dropout; model semester 1 masih F1 0,778 | % mahasiswa risiko tinggi yang dihubungi ≤ 2 minggu |
 | 2 | Pendampingan akademik | 0 MK lulus di semester 2 → 84% dropout; lulus semua → 6% | approval rate semester berikutnya pada mahasiswa yang didampingi |
 | 3 | Intervensi finansial proaktif | Tidak lunas → 87%; debtor → 62% | % mahasiswa menunggak yang ikut skema cicilan & tetap aktif |
 | 4 | Perluasan beasiswa | Penerima beasiswa hanya 12% dropout (vs 39%) | tingkat dropout penerima beasiswa baru |
@@ -33,9 +33,13 @@ Membandingkan dropout "sebelum vs sesudah program" saja **tidak cukup**, karena 
 Menyebutkan keterbatasan **bukan** tanda proyek yang lemah. Justru itu menunjukkan Anda memahaminya secara mendalam.
 
 ### 1. Waktu deteksi: model butuh data semester 2
-Model memakai 8 fitur akademik semester 1 **dan 2**, sehingga baru bisa dipakai **setelah semester 2 berakhir**. Di bagian kesimpulan notebook tertulis "deteksi dapat dilakukan segera setelah semester pertama berakhir". Itu **belum sepenuhnya tepat untuk model yang disimpan**. Kalimat yang akurat:
+Model memakai 8 fitur akademik semester 1 **dan 2**, sehingga baru bisa dipakai **setelah semester 2 berakhir**.
 
-> Model semester 1 saja (15 fitur) masih mencapai **F1 0,778, recall 0,789, AUC 0,905**. Jadi deteksi satu semester lebih awal **bisa dilakukan** dengan model terpisah, dengan sedikit penurunan performa.
+Versi awal kesimpulan notebook menulis "deteksi dapat dilakukan segera setelah semester pertama berakhir". Kalimat itu **tidak tepat untuk model yang disimpan**, karena model tersebut membutuhkan data semester 2. Klaim ini **sudah diperbaiki** di notebook dan README. Notebook sekarang juga punya bagian baru *Evaluation → 4. Model deteksi dini* sebagai buktinya:
+
+> Model semester 1 saja (15 fitur, hyperparameter sama dengan model utama) masih mencapai **F1 0,778, recall 0,789, AUC 0,905**. Jadi deteksi satu semester lebih awal **bisa dilakukan** dengan model terpisah, dengan sedikit penurunan performa.
+
+**Pelajaran:** setiap klaim di kesimpulan harus bisa ditunjuk buktinya di analisis. Jika belum ada buktinya, tambahkan analisisnya atau perlunak klaimnya.
 
 Idealnya institusi memakai **dua model bertahap**: model semester 1 untuk peringatan awal, dan model semester 2 untuk konfirmasi.
 

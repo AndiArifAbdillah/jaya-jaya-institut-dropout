@@ -82,7 +82,7 @@ X_train, X_test = train_test_split(...)
 ```
 Rata-rata data uji ikut "bocor" ke data latih. Solusinya: fit scaler **hanya pada data latih**. Di proyek ini hal itu dijamin oleh **Pipeline** (bagian 5.7). Di dalam cross-validation pun, pipeline di-fit ulang di setiap fold hanya dengan data fold latih.
 
-**2. Leakage waktu (target leakage).** Fitur yang baru tersedia **setelah** atau **bersamaan dengan** kejadian yang ingin diprediksi. Model ini memakai data **semester 2**. Artinya model baru bisa dipakai **setelah semester 2 selesai**, bukan saat mahasiswa baru masuk. Ini bukan kesalahan, tetapi batasan penting yang harus disampaikan dengan jujur ([Modul 10](10-bisnis-kesimpulan-etika.md)). Model yang hanya memakai data semester 1 masih mencapai F1 0,778, jadi deteksi bisa dilakukan satu semester lebih awal dengan sedikit penurunan akurasi.
+**2. Leakage waktu (target leakage).** Fitur yang baru tersedia **setelah** atau **bersamaan dengan** kejadian yang ingin diprediksi. Model ini memakai data **semester 2**. Artinya model baru bisa dipakai **setelah semester 2 selesai**, bukan saat mahasiswa baru masuk. Ini bukan kesalahan, tetapi batasan penting yang harus disampaikan dengan jujur ([Modul 10](10-bisnis-kesimpulan-etika.md)). Model yang hanya memakai data semester 1 masih mencapai F1 0,778 (lihat notebook, *Evaluation → 4. Model deteksi dini*), jadi deteksi bisa dilakukan satu semester lebih awal dengan sedikit penurunan akurasi.
 
 ## 5.5 One-Hot Encoding untuk kategori
 
