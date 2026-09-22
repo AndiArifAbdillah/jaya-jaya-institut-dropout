@@ -92,23 +92,33 @@ st.markdown("""
 
 
 # ------------------------------------------------------------------ model utilities
+def file_version(path):
+    """Ukuran + waktu modifikasi file, dipakai sebagai kunci cache.
+
+    Tanpa kunci ini Streamlit tetap memakai isi file lama dari cache setelah model dilatih ulang
+    (mis. setelah git push ke Streamlit Cloud), sehingga metadata/model yang tampil tidak sinkron.
+    """
+    stat = path.stat()
+    return stat.st_size, stat.st_mtime_ns
+
+
 @st.cache_resource
-def load_model():
+def load_model(version):
     return joblib.load(MODEL_PATH)
 
 
 @st.cache_data
-def load_metadata():
-    return json.loads(METADATA_PATH.read_text())
+def load_metadata(version):
+    return json.loads(METADATA_PATH.read_text(encoding="utf-8"))
 
 
 @st.cache_data
-def load_enrolled():
+def load_enrolled(version):
     return pd.read_csv(ENROLLED_PATH)
 
 
 @st.cache_resource
-def reference_mean(_model, features):
+def reference_mean(_model, features, model_version):
     """Rata-rata vektor fitur (setelah preprocessing) data latih (Dropout & Graduate) sebagai acuan 'mahasiswa rata-rata'."""
     if not REFERENCE_DATA_PATH.exists():
         return None
@@ -134,7 +144,7 @@ def feature_contributions(model, features, row):
         return None
     preprocessor = model.named_steps["preprocessor"]
     transformed = np.asarray(preprocessor.transform(row[features]))[0]
-    baseline = reference_mean(model, features)
+    baseline = reference_mean(model, features, file_version(MODEL_PATH))
     if baseline is not None:
         transformed = transformed - baseline
     contrib = transformed * estimator.coef_[0]
@@ -175,8 +185,8 @@ def risk_signals(row):
 
 # ------------------------------------------------------------------ app
 try:
-    model = load_model()
-    metadata = load_metadata()
+    model = load_model(file_version(MODEL_PATH))
+    metadata = load_metadata(file_version(METADATA_PATH))
 except FileNotFoundError:
     st.error("Model tidak ditemukan. Jalankan `notebook.ipynb` terlebih dahulu untuk menghasilkan `model/model.joblib`.")
     st.stop()
@@ -326,17 +336,18 @@ with tab_batch:
                 "(masih aktif) yang status akhirnya belum diketahui. Unggah file CSV yang memuat kolom berikut "
                 "(kolom lain akan tetap dipertahankan):")
     st.code(", ".join(FEATURES), language=None)
+    enrolled = load_enrolled(file_version(ENROLLED_PATH))
     c1, c2 = st.columns([1, 1])
-    c1.download_button("⬇️ Unduh template / data mahasiswa Enrolled (CSV)", load_enrolled().to_csv(index=False),
+    c1.download_button("⬇️ Unduh template / data mahasiswa Enrolled (CSV)", enrolled.to_csv(index=False),
                        file_name="data_mahasiswa_enrolled.csv", mime="text/csv", width="stretch")
-    use_sample = c2.toggle(f"Gunakan data mahasiswa Enrolled ({len(load_enrolled())} mahasiswa aktif)")
+    use_sample = c2.toggle(f"Gunakan data mahasiswa Enrolled ({len(enrolled)} mahasiswa aktif)")
     uploaded = st.file_uploader("Unggah CSV", type=["csv"])
 
     batch = None
     if uploaded is not None:
         batch = pd.read_csv(uploaded, sep=None, engine="python")
     elif use_sample:
-        batch = load_enrolled()
+        batch = enrolled
 
     if batch is not None:
         missing = [c for c in FEATURES if c not in batch.columns]
