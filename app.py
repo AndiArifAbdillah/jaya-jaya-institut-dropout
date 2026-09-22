@@ -12,7 +12,7 @@ BASE_DIR = Path(__file__).parent
 MODEL_PATH = BASE_DIR / "model" / "model.joblib"
 METADATA_PATH = BASE_DIR / "model" / "model_metadata.json"
 REFERENCE_DATA_PATH = BASE_DIR / "data.csv"
-SAMPLE_PATH = BASE_DIR / "sample_students.csv"
+ENROLLED_PATH = BASE_DIR / "data_enrolled.csv"
 
 RISK_LEVELS = [  # (batas bawah probabilitas, label, warna, ikon)
     (0.50, "Tinggi", "#d03b3b", "🔴"),
@@ -103,16 +103,17 @@ def load_metadata():
 
 
 @st.cache_data
-def load_sample():
-    return pd.read_csv(SAMPLE_PATH)
+def load_enrolled():
+    return pd.read_csv(ENROLLED_PATH)
 
 
 @st.cache_resource
 def reference_mean(_model, features):
-    """Rata-rata vektor fitur (setelah preprocessing) sebagai titik acuan 'mahasiswa rata-rata'."""
+    """Rata-rata vektor fitur (setelah preprocessing) data latih (Dropout & Graduate) sebagai acuan 'mahasiswa rata-rata'."""
     if not REFERENCE_DATA_PATH.exists():
         return None
-    reference = pd.read_csv(REFERENCE_DATA_PATH, sep=";")[features]
+    reference = pd.read_csv(REFERENCE_DATA_PATH, sep=";")
+    reference = reference[reference["Status"].isin(["Dropout", "Graduate"])][features]
     return np.asarray(_model.named_steps["preprocessor"].transform(reference)).mean(axis=0)
 
 
@@ -202,7 +203,9 @@ with st.sidebar:
 
 st.title("🎓 Dropout Early Warning System")
 st.markdown("Prototype untuk membantu staf akademik **Jaya Jaya Institut** mendeteksi mahasiswa yang berisiko "
-            "*dropout* sedini mungkin berdasarkan data pendaftaran, finansial, dan performa semester 1–2.")
+            "*dropout* sedini mungkin berdasarkan data pendaftaran, finansial, dan performa semester 1–2. "
+            "Model dilatih dari mahasiswa yang status akhirnya sudah diketahui (**Dropout** vs **Graduate**) "
+            "dan dipakai untuk memprediksi mahasiswa yang masih aktif (**Enrolled**).")
 
 tab_single, tab_batch, tab_about = st.tabs(["🧑‍🎓 Prediksi Individu", "📂 Prediksi Batch (CSV)", "ℹ️ Tentang Model"])
 
@@ -273,7 +276,7 @@ with tab_single:
 
         probability = float(predict(model, FEATURES, row)[0])
         label, color, icon = risk_level(probability)
-        verdict = "Diprediksi DROPOUT" if probability >= metadata["threshold"] else "Diprediksi TIDAK dropout"
+        verdict = "Diprediksi DROPOUT" if probability >= metadata["threshold"] else "Diprediksi GRADUATE (lulus)"
 
         st.divider()
         left, right = st.columns([1, 1.4], gap="large")
@@ -319,20 +322,21 @@ with tab_single:
 
 # ------------------------------------------------------------------ batch prediction
 with tab_batch:
-    st.markdown("Unggah file CSV berisi data banyak mahasiswa untuk mendapatkan daftar mahasiswa yang perlu "
-                "diprioritaskan. File harus memuat kolom berikut (kolom lain akan tetap dipertahankan):")
+    st.markdown("Prediksi risiko dropout untuk banyak mahasiswa sekaligus — misalnya seluruh mahasiswa **Enrolled** "
+                "(masih aktif) yang status akhirnya belum diketahui. Unggah file CSV yang memuat kolom berikut "
+                "(kolom lain akan tetap dipertahankan):")
     st.code(", ".join(FEATURES), language=None)
     c1, c2 = st.columns([1, 1])
-    c1.download_button("⬇️ Unduh template / contoh CSV", load_sample().to_csv(index=False),
-                       file_name="contoh_data_mahasiswa.csv", mime="text/csv", width="stretch")
-    use_sample = c2.toggle("Gunakan contoh data (30 mahasiswa)")
+    c1.download_button("⬇️ Unduh template / data mahasiswa Enrolled (CSV)", load_enrolled().to_csv(index=False),
+                       file_name="data_mahasiswa_enrolled.csv", mime="text/csv", width="stretch")
+    use_sample = c2.toggle(f"Gunakan data mahasiswa Enrolled ({len(load_enrolled())} mahasiswa aktif)")
     uploaded = st.file_uploader("Unggah CSV", type=["csv"])
 
     batch = None
     if uploaded is not None:
         batch = pd.read_csv(uploaded, sep=None, engine="python")
     elif use_sample:
-        batch = load_sample()
+        batch = load_enrolled()
 
     if batch is not None:
         missing = [c for c in FEATURES if c not in batch.columns]
@@ -343,7 +347,7 @@ with tab_batch:
             result["Probabilitas_Dropout"] = predict(model, FEATURES, batch)
             result["Level_Risiko"] = result["Probabilitas_Dropout"].map(lambda p: risk_level(p)[0])
             result["Prediksi"] = np.where(result["Probabilitas_Dropout"] >= metadata["threshold"], "Dropout",
-                                          "Tidak Dropout")
+                                          "Graduate")
             result.insert(0, "Program_Studi", result["Course"].map(COURSE_MAP))
             result = result.sort_values("Probabilitas_Dropout", ascending=False).reset_index(drop=True)
 
@@ -381,8 +385,12 @@ with tab_about:
     st.markdown(f"""
 - **Algoritma:** {metadata['model_name']} (parameter terbaik: `{metadata['best_params']}`), dibungkus dalam
   pipeline `OneHotEncoder` + `StandardScaler`.
-- **Target:** `Dropout` (1) vs `Graduate/Enrolled` (0). Threshold prediksi {metadata['threshold']:.0%}.
-- **Data:** {metadata['n_train']:,} data latih & {metadata['n_test']:,} data uji (split 80:20 stratified).
+- **Target:** `Dropout` (1) vs `Graduate` (0). Threshold prediksi {metadata['threshold']:.0%}.
+- **Data:** hanya mahasiswa dengan status akhir yang sudah diketahui (Dropout & Graduate):
+  {metadata['n_train']:,} data latih & {metadata['n_test']:,} data uji (split 80:20 stratified).
+- **Mahasiswa Enrolled** ({metadata['n_enrolled']:,}) tidak dipakai untuk melatih model karena status akhirnya belum
+  diketahui — mereka adalah data yang **diprediksi**: {metadata['enrolled_risk_counts']['Tinggi']} berisiko tinggi,
+  {metadata['enrolled_risk_counts']['Sedang']} sedang, {metadata['enrolled_risk_counts']['Rendah']} rendah.
 - **Fitur:** {len(FEATURES)} fitur pendaftaran, finansial, dan akademik semester 1–2.
 """)
     c1, c2, c3, c4, c5 = st.columns(5)
@@ -397,9 +405,8 @@ with tab_about:
         cm = metadata["confusion_matrix"]
         st.markdown("**Confusion matrix**")
         st.dataframe(pd.DataFrame([[cm["tn"], cm["fp"]], [cm["fn"], cm["tp"]]],
-                                  index=["Aktual tidak DO", "Aktual DO"],
-                                  columns=["Prediksi tidak DO", "Prediksi DO"]), width="stretch")
-        st.caption("DO = Dropout")
+                                  index=["Aktual Graduate", "Aktual Dropout"],
+                                  columns=["Prediksi Graduate", "Prediksi Dropout"]), width="stretch")
     with right:
         importance = pd.DataFrame({"feature": list(metadata["top_features"]),
                                    "importance": list(metadata["top_features"].values())})

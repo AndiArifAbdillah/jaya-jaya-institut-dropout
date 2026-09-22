@@ -13,8 +13,8 @@ Jaya Jaya Institut ingin **mendeteksi sedini mungkin mahasiswa yang berpotensi d
 
 ### Cakupan Proyek
 1. **Data understanding & EDA** terhadap dataset *Students' Performance* (4.424 mahasiswa, 37 kolom) untuk menemukan faktor-faktor utama dropout.
-2. **Data preparation**: pelabelan kode kategori untuk dashboard, penentuan target biner (Dropout vs Tidak Dropout), seleksi fitur, train-test split, dan pipeline preprocessing.
-3. **Modeling & evaluation**: membandingkan Logistic Regression, Random Forest, dan Gradient Boosting dengan `GridSearchCV`, lalu memilih model terbaik berdasarkan F1-score.
+2. **Data preparation**: pelabelan kode kategori untuk dashboard; **pemisahan data** — hanya mahasiswa dengan status akhir yang sudah diketahui (**Dropout = 1, Graduate = 0**; 3.630 mahasiswa) yang dipakai untuk pemodelan, sedangkan **794 mahasiswa Enrolled** (status akhir belum diketahui) dipisahkan sebagai **data prediksi**; seleksi fitur, train-test split, dan pipeline preprocessing.
+3. **Modeling & evaluation**: membandingkan Logistic Regression, Random Forest, dan Gradient Boosting dengan `GridSearchCV`, memilih model berdasarkan F1-score cross-validation, lalu **memprediksi risiko dropout mahasiswa Enrolled**.
 4. **Business dashboard** menggunakan **Metabase** (dengan database PostgreSQL) untuk memonitor performa mahasiswa.
 5. **Prototype sistem machine learning** menggunakan **Streamlit** yang di-deploy ke Streamlit Community Cloud.
 6. **Kesimpulan dan rekomendasi action items** bagi Jaya Jaya Institut.
@@ -31,7 +31,8 @@ Struktur proyek:
 ├── notebook.ipynb                # seluruh proses data science
 ├── app.py                        # prototype Streamlit
 ├── data.csv                      # dataset
-├── sample_students.csv           # contoh data untuk fitur prediksi batch
+├── data_enrolled.csv             # 794 mahasiswa Enrolled (data prediksi) untuk fitur prediksi batch
+├── hasil_prediksi_enrolled.csv   # hasil prediksi risiko dropout mahasiswa Enrolled
 ├── metabase.db.mv.db             # database Metabase (dashboard)
 ├── andi_arif_abdillah-dashboard.png  # screenshot dashboard
 ├── andi_arif_abdillah-video.mp4      # video presentasi (maks. 5 menit)
@@ -103,9 +104,9 @@ docker cp metabase:/metabase.db/metabase.db.mv.db ./
 
 ## Menjalankan Sistem Machine Learning
 
-Prototype **Dropout Early Warning System** dibuat menggunakan Streamlit dan memanfaatkan model **Logistic Regression** (`model/model.joblib`). Fitur aplikasi:
+Prototype **Dropout Early Warning System** dibuat menggunakan Streamlit dan memanfaatkan model **Logistic Regression** (`model/model.joblib`) yang dilatih dengan data mahasiswa **Dropout vs Graduate**. Hasil prediksinya berupa **Dropout** atau **Graduate** beserta probabilitasnya. Fitur aplikasi:
 1. **Prediksi Individu** — staf akademik mengisi data pendaftaran, finansial, dan performa semester 1–2 seorang mahasiswa. Aplikasi menampilkan **probabilitas dropout**, **level risiko** (Rendah < 30%, Sedang 30–49%, Tinggi ≥ 50%), **faktor yang paling memengaruhi prediksi**, serta **sinyal risiko beserta rekomendasi tindakan**. Tersedia tombol untuk mengisi contoh mahasiswa berisiko tinggi/rendah.
-2. **Prediksi Batch (CSV)** — mengunggah data banyak mahasiswa sekaligus (template tersedia di aplikasi), menampilkan ringkasan jumlah mahasiswa per level risiko, tabel yang diurutkan berdasarkan probabilitas dropout, dan hasil prediksi dapat diunduh.
+2. **Prediksi Batch (CSV)** — memprediksi banyak mahasiswa sekaligus. Tersedia opsi **"Gunakan data mahasiswa Enrolled"** untuk langsung memprediksi 794 mahasiswa yang masih aktif (438 berisiko tinggi, 150 sedang, 206 rendah), atau unggah CSV sendiri (template tersedia di aplikasi). Aplikasi menampilkan ringkasan per level risiko, tabel yang diurutkan berdasarkan probabilitas dropout, dan hasil prediksi dapat diunduh.
 3. **Tentang Model** — metrik evaluasi, perbandingan model, confusion matrix, dan fitur paling berpengaruh.
 
 Menjalankan prototype secara lokal:
@@ -129,11 +130,13 @@ Link prototype (Streamlit Community Cloud): **https://jaya-jaya-institut-do.stre
    - **Kondisi finansial**: mahasiswa yang **biaya kuliahnya tidak lunas memiliki tingkat dropout 87%** (vs 25% yang lunas) dan mahasiswa dengan **tunggakan 62%**. Sebaliknya, **penerima beasiswa hanya 12%** dropout (vs 39% non-penerima).
    - **Profil pendaftaran & demografi**: mahasiswa yang mendaftar di **usia > 24 tahun** (dropout > 50%), jalur **Over 23 years old** (55%) dan **Holders of other higher courses** (61%), **kelas malam** (43%), dan **laki-laki** (45%) lebih rentan dropout. Program studi dengan tingkat dropout tertinggi adalah **Equinculture (55%)**, **Informatics Engineering (54%)**, **Management (evening) (51%)**, dan **Basic Education (44%)**, sedangkan **Nursing (15%)** paling rendah.
    - Faktor makroekonomi (pengangguran, inflasi, GDP) dan latar belakang orang tua hampir tidak membedakan status mahasiswa.
-3. **Model machine learning** Logistic Regression dengan 19 fitur mampu mendeteksi **83,1% mahasiswa yang akan dropout** (recall) dengan precision 80,5%, **F1-score 0,818**, akurasi 88,1%, dan **ROC-AUC 0,930** pada data uji. Dari 284 mahasiswa dropout di data uji, 236 berhasil terdeteksi. Model ini dipilih dari tiga algoritma (Logistic Regression, Random Forest, Gradient Boosting) berdasarkan F1-score cross-validation.
-4. **Waktu deteksi.** Model utama memakai data semester 1 **dan** 2, sehingga dapat dijalankan **setelah nilai semester 2 keluar**. Model pembanding yang hanya memakai data semester 1 masih mencapai **F1 0,778** (recall 0,789; ROC-AUC 0,905), sehingga peringatan **satu semester lebih awal** juga dapat dilakukan dengan sedikit penurunan performa. Hasil deteksi kemudian dipantau melalui dashboard Metabase dan prototype Streamlit.
+3. **Model machine learning** dilatih hanya dengan mahasiswa yang status akhirnya sudah diketahui (**Dropout = 1, Graduate = 0**), karena status mahasiswa Enrolled belum final sehingga akan membuat target ambigu. Model **Logistic Regression** dengan 19 fitur mampu mendeteksi **92,3% mahasiswa yang akan dropout** (recall) dengan precision 89,1%, **F1-score 0,907**, akurasi 92,6%, dan **ROC-AUC 0,973** pada data uji. Dari 284 mahasiswa dropout di data uji, 262 berhasil terdeteksi. Ketiga algoritma yang dibandingkan setara secara statistik (selisih CV F1 lebih kecil dari standar deviasi antar-fold), sehingga dipilih Logistic Regression yang paling sederhana, memiliki CV recall tertinggi, dan dapat menjelaskan faktor risiko setiap mahasiswa.
+4. **Prediksi mahasiswa aktif (Enrolled).** Model diterapkan pada **794 mahasiswa Enrolled** yang dipisahkan sejak awal: **438 (55%) berisiko tinggi**, 150 (19%) sedang, dan 206 (26%) rendah. Sebanyak **119 mahasiswa** memiliki probabilitas dropout ≥ 90% dan menjadi prioritas utama bimbingan. Proporsi tertinggi ada di Informatics Engineering (83% mahasiswa Enrolled-nya berisiko tinggi), sedangkan jumlah terbanyak ada di Management (67 mahasiswa). Daftar lengkap tersedia di `hasil_prediksi_enrolled.csv`.
+5. **Waktu deteksi.** Model utama memakai data semester 1 **dan** 2, sehingga dapat dijalankan **setelah nilai semester 2 keluar**. Model pembanding yang hanya memakai data semester 1 masih mencapai **F1 0,857** (recall 0,884; ROC-AUC 0,946), sehingga peringatan **satu semester lebih awal** juga dapat dilakukan dengan sedikit penurunan performa. Hasil deteksi kemudian dipantau melalui dashboard Metabase dan prototype Streamlit.
 
 ### Rekomendasi Action Items
-- **Terapkan sistem peringatan dini bertahap.** Setelah nilai semester 2 keluar, jalankan prediksi batch untuk seluruh mahasiswa menggunakan prototype Streamlit; mahasiswa berlevel risiko **Tinggi** wajib dihubungi dosen wali dalam 1–2 minggu, sedangkan level **Sedang** dipantau secara berkala. Tambahkan model deteksi dini berbasis data semester 1 (F1 0,778) agar peringatan awal sudah bisa diberikan setelah semester 1.
+- **Tindak lanjuti segera 438 mahasiswa Enrolled berisiko tinggi.** Mulai dari 119 mahasiswa dengan probabilitas dropout ≥ 90% (`hasil_prediksi_enrolled.csv`): jadwalkan pertemuan dengan dosen wali, identifikasi kendala akademik/finansialnya, dan susun rencana penyelesaian studi.
+- **Terapkan sistem peringatan dini bertahap.** Setelah nilai semester 2 keluar, jalankan prediksi batch untuk seluruh mahasiswa aktif menggunakan prototype Streamlit; mahasiswa berlevel risiko **Tinggi** wajib dihubungi dosen wali dalam 1–2 minggu, sedangkan level **Sedang** dipantau secara berkala. Tambahkan model deteksi dini berbasis data semester 1 (F1 0,857) agar peringatan awal sudah bisa diberikan setelah semester 1.
 - **Program pendampingan akademik untuk mahasiswa dengan approval rate rendah.** Mahasiswa yang lulus < 50% mata kuliah atau memiliki rata-rata nilai < 10 di semester 1 diberikan tutor sebaya, kelas remedial, dan evaluasi beban SKS sebelum semester 2 dimulai.
 - **Intervensi finansial proaktif.** Pantau status pembayaran biaya kuliah setiap bulan; tawarkan skema cicilan, penundaan pembayaran, atau dana darurat kepada mahasiswa yang menunggak sebelum mereka memutuskan berhenti.
 - **Perluas dan targetkan beasiswa/bantuan biaya.** Karena penerima beasiswa jauh lebih jarang dropout, alokasikan beasiswa parsial atau beasiswa berbasis kebutuhan bagi mahasiswa berprestasi yang kesulitan finansial.

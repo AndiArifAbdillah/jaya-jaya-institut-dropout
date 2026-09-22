@@ -47,63 +47,79 @@
     "Curricular_units_2nd_sem_approved",
     "Curricular_units_2nd_sem_grade"
   ],
+  "target": "Dropout (1) vs Graduate (0); mahasiswa Enrolled tidak dipakai untuk training/testing",
   "threshold": 0.5,
   "test_metrics": {
-    "CV F1": 0.793,
-    "Accuracy": 0.8814,
-    "Precision": 0.8055,
-    "Recall": 0.831,
-    "F1": 0.818,
-    "ROC-AUC": 0.9302
+    "CV F1": 0.8723,
+    "CV F1 std": 0.0111,
+    "CV Recall": 0.854,
+    "Accuracy": 0.9256,
+    "Precision": 0.8912,
+    "Recall": 0.9225,
+    "F1": 0.9066,
+    "ROC-AUC": 0.9726
   },
   "confusion_matrix": {
-    "tn": 544,
-    "fp": 57,
-    "fn": 48,
-    "tp": 236
+    "tn": 410,
+    "fp": 32,
+    "fn": 22,
+    "tp": 262
   },
   "model_comparison": [
     {
       "Model": "Logistic Regression",
-      "CV F1": 0.793,
-      "Accuracy": 0.8814,
-      "Precision": 0.8055,
-      "Recall": 0.831,
-      "F1": 0.818,
-      "ROC-AUC": 0.9302
+      "CV F1": 0.8723,
+      "CV F1 std": 0.0111,
+      "CV Recall": 0.854,
+      "Accuracy": 0.9256,
+      "Precision": 0.8912,
+      "Recall": 0.9225,
+      "F1": 0.9066,
+      "ROC-AUC": 0.9726
     },
     {
       "Model": "Random Forest",
-      "CV F1": 0.7915,
-      "Accuracy": 0.8802,
-      "Precision": 0.8248,
-      "Recall": 0.7958,
-      "F1": 0.81,
-      "ROC-AUC": 0.9289
+      "CV F1": 0.8685,
+      "CV F1 std": 0.0169,
+      "CV Recall": 0.8364,
+      "Accuracy": 0.927,
+      "Precision": 0.911,
+      "Recall": 0.9014,
+      "F1": 0.9062,
+      "ROC-AUC": 0.9689
     },
     {
       "Model": "Gradient Boosting",
-      "CV F1": 0.7788,
-      "Accuracy": 0.8746,
-      "Precision": 0.856,
-      "Recall": 0.7324,
-      "F1": 0.7894,
-      "ROC-AUC": 0.9287
+      "CV F1": 0.8733,
+      "CV F1 std": 0.0206,
+      "CV Recall": 0.832,
+      "Accuracy": 0.9242,
+      "Precision": 0.9164,
+      "Recall": 0.8873,
+      "F1": 0.9016,
+      "ROC-AUC": 0.9751
     }
   ],
   "top_features": {
-    "Curricular_units_2nd_sem_approved": 0.2286,
-    "Tuition_fees_up_to_date": 0.069,
-    "Curricular_units_2nd_sem_enrolled": 0.059,
-    "Curricular_units_1st_sem_approved": 0.0576,
-    "Curricular_units_1st_sem_enrolled": 0.0302,
-    "Curricular_units_2nd_sem_grade": 0.0285,
-    "Age_at_enrollment": 0.0136,
-    "Course": 0.0095,
-    "Gender": 0.0086,
-    "Application_mode": 0.0083
+    "Curricular_units_2nd_sem_approved": 0.2268,
+    "Curricular_units_1st_sem_approved": 0.1094,
+    "Tuition_fees_up_to_date": 0.0567,
+    "Curricular_units_2nd_sem_enrolled": 0.0523,
+    "Curricular_units_1st_sem_enrolled": 0.0379,
+    "Curricular_units_2nd_sem_grade": 0.0302,
+    "Debtor": 0.0116,
+    "Gender": 0.0089,
+    "Curricular_units_2nd_sem_evaluations": 0.0073,
+    "Course": 0.0071
   },
-  "n_train": 3539,
-  "n_test": 885,
-  "trained_at": "2026-09-14"
+  "n_train": 2904,
+  "n_test": 726,
+  "n_model_data": 3630,
+  "n_enrolled": 794,
+  "enrolled_risk_counts": {
+    "Tinggi": 438,
+    "Sedang": 150,
+    "Rendah": 206
+  },
+  "trained_at": "2026-09-22"
 }
