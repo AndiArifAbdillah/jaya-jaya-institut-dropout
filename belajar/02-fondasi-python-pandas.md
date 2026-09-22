@@ -33,7 +33,7 @@ COURSE_MAP[9500]           # → "Nursing"
 status_pct = 32.1203
 f"Hampir 1 dari 3 mahasiswa dropout ({status_pct:.1f}%)"   # → "... (32.1%)"
 f"{4424:,}"                                                 # → "4,424"  (pemisah ribuan)
-f"{0.831:.0%}"                                              # → "83%"    (format persen)
+f"{0.923:.0%}"                                              # → "92%"    (format persen)
 ```
 
 `:.1f` = 1 angka desimal, `:,` = pemisah ribuan, `:.0%` = kali 100 lalu tambah `%`.

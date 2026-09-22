@@ -105,13 +105,13 @@ Hasilnya: **semua 180 mahasiswa** yang tercatat mengambil 0 mata kuliah berasal 
 Kesimpulannya: prodi ini kemungkinan besar **tidak mencatat data mata kuliahnya** di sistem sumber. Dampaknya:
 
 1. Pada grafik approval rate, kelompok "0%" (870 mahasiswa) ikut memuat 180 mahasiswa ini. Jika mereka dikeluarkan, mahasiswa yang **mengambil** mata kuliah tetapi tidak lulus satu pun di semester 2 memiliki tingkat dropout **94,2%** (690 mahasiswa), lebih ekstrem dari angka 84% di notebook.
-2. Untuk mahasiswa prodi 171, model **hampir menebak**: rata-rata probabilitasnya 0,49, sementara tingkat dropout aslinya 38%.
+2. Untuk mahasiswa prodi 171, model **kesulitan**: pada data latih (Dropout + Graduate) tingkat dropout aslinya 46%, tetapi rata-rata probabilitas model 0,58. Pada mahasiswa **Enrolled** prodi ini, 28 dari 37 tidak punya data akademik dan rata-rata probabilitasnya 0,60, sehingga risikonya kemungkinan dinilai terlalu tinggi.
 
 Temuan seperti ini tidak terlihat di `df.info()` atau `df.isna()`. Temuan ini hanya muncul kalau Anda **bertanya dan memeriksa**. Perbaikannya dibahas di [Modul 10](10-bisnis-kesimpulan-etika.md) dan [latihan modul 11](11-latihan-dan-kuis.md).
 
 ## 3.6 Ketidakseimbangan kelas
 
-Jika target dibuat biner (Dropout vs lainnya): **32% vs 68%**. Artinya model "bodoh" yang **selalu** menebak "tidak dropout" sudah mendapat **akurasi 67,9%** tanpa belajar apa pun. Inilah alasan akurasi bukan metrik utama ([Modul 7](07-evaluasi-model.md)).
+Data pemodelan (Dropout vs Graduate, tanpa Enrolled) berisi **39% dropout vs 61% graduate**. Artinya model "bodoh" yang **selalu** menebak "Graduate" sudah mendapat **akurasi 60,9%** tanpa belajar apa pun. Inilah alasan akurasi bukan metrik utama ([Modul 7](07-evaluasi-model.md)).
 
 ---
 

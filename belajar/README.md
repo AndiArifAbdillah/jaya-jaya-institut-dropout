@@ -33,13 +33,13 @@ Kerjakan **berurutan**. Setiap modul membangun di atas modul sebelumnya.
 | 2 | [Fondasi Python & pandas](02-fondasi-python-pandas.md) | Semua sintaks Python/pandas yang dipakai di proyek | 2–3 jam |
 | 3 | [Memahami data](03-memahami-data.md) | Arti 37 kolom, tipe data, jebakan kolom berkode | 1 jam |
 | 4 | [Statistik & EDA](04-statistik-dan-eda.md) | Statistik deskriptif, tingkat dropout, korelasi, membaca grafik | 2 jam |
-| 5 | [Persiapan data](05-persiapan-data.md) | Target, seleksi fitur, split, encoding, scaling, pipeline, data leakage | 2 jam |
+| 5 | [Persiapan data](05-persiapan-data.md) | Pemisahan data pemodelan vs data prediksi (Enrolled), target, seleksi fitur, split, encoding, scaling, pipeline, data leakage | 2 jam |
 | 6 | [Machine learning](06-machine-learning.md) | Logistic Regression sampai rumusnya, Random Forest, Gradient Boosting, cross-validation | 3 jam |
 | 7 | [Evaluasi model](07-evaluasi-model.md) | Confusion matrix, precision/recall/F1, ROC-AUC, threshold, feature importance | 2 jam |
 | 8 | [Aplikasi Streamlit & deployment](08-aplikasi-streamlit.md) | Cara kerja Streamlit, bedah `app.py`, deploy ke Cloud | 2 jam |
 | 9 | [Dashboard Metabase, SQL & Docker](09-dashboard-metabase.md) | Docker, PostgreSQL, SQL analitik, filter Metabase | 2 jam |
 | 10 | [Bisnis, kesimpulan & etika](10-bisnis-kesimpulan-etika.md) | Dari insight ke action item, keterbatasan, fairness | 1 jam |
-| 11 | [Latihan, kuis & simulasi review](11-latihan-dan-kuis.md) | 12 latihan praktik, 30 soal kuis, pertanyaan "sidang" | 3–5 jam |
+| 11 | [Latihan, kuis & simulasi review](11-latihan-dan-kuis.md) | 13 latihan praktik, 32 soal kuis, 11 pertanyaan "sidang" | 3–5 jam |
 | 📖 | [Glosarium](GLOSARIUM.md) | Kamus istilah — buka kapan saja | – |
 | 📎 | [lampiran/metabase_setup.py](lampiran/metabase_setup.py) | Skrip yang membangun dashboard lewat API Metabase | – |
 
@@ -80,12 +80,13 @@ Centang jika Anda bisa melakukannya **tanpa melihat catatan**:
 - [ ] Menjelaskan apa itu EDA, tujuannya, dan 3 jenis analisisnya (univariat, bivariat, multivariat)
 - [ ] Menjelaskan masalah bisnis dan tujuan proyek dalam 1 menit
 - [ ] Menyebutkan 3 kelompok faktor utama dropout beserta angkanya
-- [ ] Menjelaskan kenapa target dibuat biner (Dropout vs Tidak Dropout)
+- [ ] Menjelaskan kenapa model hanya dilatih dengan Dropout vs Graduate, dan kenapa Enrolled menjadi data prediksi
 - [ ] Menjelaskan kenapa `Course` tidak boleh diperlakukan sebagai angka biasa
 - [ ] Menjelaskan apa itu data leakage dan bagaimana `Pipeline` mencegahnya
 - [ ] Menuliskan rumus sigmoid dan menjelaskan arti koefisien Logistic Regression
 - [ ] Menghitung precision, recall, F1 dari confusion matrix proyek ini dengan tangan
-- [ ] Menjelaskan kenapa akurasi 88% bukan angka yang paling penting di proyek ini
+- [ ] Menjelaskan kenapa akurasi 92,6% bukan angka yang paling penting di proyek ini
+- [ ] Menjelaskan kenapa Logistic Regression dipilih walau CV F1 Gradient Boosting sedikit lebih tinggi
 - [ ] Menjelaskan apa yang terjadi jika threshold diturunkan dari 0,5 ke 0,3
 - [ ] Menjelaskan cara kerja Streamlit (rerun dari atas ke bawah) dan fungsi `st.cache_resource`
 - [ ] Menulis query SQL untuk menghitung tingkat dropout per program studi

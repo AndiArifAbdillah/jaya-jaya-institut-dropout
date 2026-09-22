@@ -95,6 +95,8 @@ probability = float(model.predict_proba(row[FEATURES])[:, 1][0])
 ```
 `[FEATURES]` memastikan **urutan kolom** sama persis dengan saat model dilatih. Daftar fitur diambil dari `model_metadata.json`, jadi aplikasi dan notebook selalu sinkron.
 
+Hasilnya ditampilkan sebagai **"Diprediksi DROPOUT"** (probabilitas ≥ threshold 0,5) atau **"Diprediksi GRADUATE (lulus)"**, sesuai target model: Dropout (1) vs Graduate (0). Contoh bawaan: tombol *risiko tinggi* menghasilkan **100%**, tombol *risiko rendah* menghasilkan **3%**.
+
 ### Level risiko
 ```python
 RISK_LEVELS = [(0.50, "Tinggi", ...), (0.30, "Sedang", ...), (0.00, "Rendah", ...)]
@@ -108,7 +110,11 @@ Grafik "Faktor yang paling memengaruhi prediksi" dihitung oleh `feature_contribu
 $$\text{kontribusi}_i = w_i \times (x_i^{\text{std}} - \bar{x}_i^{\text{std}})$$
 
 - $x_i^{\text{std}}$ = nilai fitur mahasiswa ini setelah preprocessing (one-hot + scaling)
-- $\bar{x}_i^{\text{std}}$ = rata-rata nilai fitur itu pada **seluruh data** (`reference_mean`), yaitu "mahasiswa rata-rata"
+- $\bar{x}_i^{\text{std}}$ = rata-rata nilai fitur itu pada **populasi latih, yaitu mahasiswa Dropout & Graduate** (`reference_mean`), sebagai "mahasiswa rata-rata". Enrolled tidak ikut dihitung supaya acuannya sama dengan data yang dipelajari model:
+  ```python
+  reference = pd.read_csv(REFERENCE_DATA_PATH, sep=";")
+  reference = reference[reference["Status"].isin(["Dropout", "Graduate"])][features]
+  ```
 - $w_i$ = koefisien Logistic Regression
 
 Hasilnya menjawab pertanyaan: *"dibanding mahasiswa rata-rata, fitur mana yang mendorong log-odds mahasiswa ini naik (oranye) atau turun (biru)?"*
@@ -126,6 +132,8 @@ grouped[original] = grouped.get(original, 0.0) + value
 
 ## 8.5 Tab Prediksi Batch
 
+Inilah fitur yang paling sesuai dengan tujuan bisnis: memprediksi **mahasiswa yang masih aktif (Enrolled)**, yang status akhirnya belum diketahui. Toggle **"Gunakan data mahasiswa Enrolled (794 mahasiswa aktif)"** memuat `data_enrolled.csv`, yaitu data 794 mahasiswa Enrolled yang dipisahkan sejak awal di notebook dan tidak pernah dipakai untuk melatih model.
+
 ```python
 batch = pd.read_csv(uploaded, sep=None, engine="python")
 ```
@@ -137,10 +145,10 @@ Alurnya:
 3. **Urutkan dari probabilitas tertinggi** supaya staf langsung melihat siapa yang perlu didahulukan.
 4. Tampilkan ringkasan (metric + grafik), tabel dengan `ProgressColumn`, dan tombol unduh hasil.
 
-Dengan contoh 30 mahasiswa (`sample_students.csv`): **8 risiko tinggi, 7 sedang, 15 rendah.**
+Dengan data 794 mahasiswa Enrolled: **438 risiko tinggi (55%), 150 sedang (19%), 206 rendah (26%)**. Angka ini sama persis dengan bagian *Evaluation → 5* di notebook. Cara membaca angka ini dengan benar dibahas di [Modul 7](07-evaluasi-model.md#79-membaca-hasil-prediksi-mahasiswa-enrolled).
 
 ## 8.6 Tab Tentang Model
-Semua angka (metrik, perbandingan model, confusion matrix, permutation importance) dibaca dari `model_metadata.json`. Jika model dilatih ulang, tab ini ikut berubah tanpa mengubah kode aplikasi.
+Semua angka (metrik, perbandingan model, confusion matrix, permutation importance, dan ringkasan prediksi Enrolled) dibaca dari `model_metadata.json`. Tab ini juga menjelaskan bahwa **target model adalah Dropout (1) vs Graduate (0)** dan bahwa mahasiswa Enrolled tidak dipakai untuk melatih model. Jika model dilatih ulang, tab ini ikut berubah tanpa mengubah kode aplikasi.
 
 ---
 
@@ -199,7 +207,7 @@ Di **Settings → Sharing**, pilih *This app is public and searchable*. Catatan 
 2. Supaya aplikasi tidak rerun setiap kali satu isian diganti. Semua isian baru diproses bersama saat tombol submit ditekan.
 3. `cache_resource` menyimpan satu objek yang dipakai bersama (cocok untuk model). `cache_data` menyimpan data dan memberi salinan setiap kali dipanggil.
 4. Supaya urutan dan nama fitur selalu sama dengan saat pelatihan. Jika model dilatih ulang dengan fitur berbeda, aplikasi ikut menyesuaikan.
-5. Nilai fitur mahasiswa (yang sudah distandardisasi) dikurangi rata-rata seluruh mahasiswa, lalu dikalikan koefisien model. Hasilnya menunjukkan seberapa besar fitur itu menaikkan atau menurunkan skor risiko dibanding mahasiswa rata-rata.
+5. Nilai fitur mahasiswa (yang sudah distandardisasi) dikurangi rata-rata mahasiswa di populasi latih (Dropout & Graduate), lalu dikalikan koefisien model. Hasilnya menunjukkan seberapa besar fitur itu menaikkan atau menurunkan skor risiko dibanding mahasiswa rata-rata.
 </details>
 
 ➡️ Lanjut ke [Modul 9 — Dashboard Metabase, SQL & Docker](09-dashboard-metabase.md)

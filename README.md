@@ -147,4 +147,4 @@ Link prototype (Streamlit Community Cloud): **https://jaya-jaya-institut-do.stre
 
 ## Materi Belajar
 
-Ingin memahami proyek ini secara mendalam — dari konsep dasar data science (termasuk **apa itu EDA**) sampai setiap keputusan teknis dan bisnisnya? Lihat folder **[`belajar/`](belajar/README.md)**: 12 modul berurutan, glosarium, 12 latihan praktik, 30 soal kuis, dan simulasi pertanyaan review.
+Ingin memahami proyek ini secara mendalam — dari konsep dasar data science (termasuk **apa itu EDA**) sampai setiap keputusan teknis dan bisnisnya? Lihat folder **[`belajar/`](belajar/README.md)**: 12 modul berurutan, glosarium, 13 latihan praktik, 32 soal kuis, dan simulasi pertanyaan review.

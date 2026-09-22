@@ -16,11 +16,11 @@ Kamus istilah yang dipakai di proyek dan materi belajar ini, diurutkan menurut a
 
 **Approval rate**: rasio mata kuliah lulus ÷ mata kuliah diambil. Fitur turunan dengan korelasi terkuat (−0,66). (2, 4)
 
-**AUC (Area Under the ROC Curve)**: peluang model memberi skor lebih tinggi kepada contoh positif dibanding contoh negatif yang dipilih acak. Proyek ini: 0,930. (7)
+**AUC (Area Under the ROC Curve)**: peluang model memberi skor lebih tinggi kepada contoh positif dibanding contoh negatif yang dipilih acak. Proyek ini: 0,973. (7)
 
 **Bagging**: melatih banyak model pada sampel acak lalu menggabungkan suaranya. Dasar Random Forest. (6)
 
-**Baseline**: model paling sederhana sebagai pembanding, misalnya "selalu tebak tidak dropout" (akurasi 67,9%). (3, 7)
+**Baseline**: model paling sederhana sebagai pembanding, misalnya "selalu tebak Graduate" (akurasi 60,9%). (3, 7)
 
 **Bias (statistik)**: kesalahan sistematis yang membuat hasil selalu condong ke satu arah. (7)
 
@@ -62,6 +62,8 @@ Kamus istilah yang dipakai di proyek dan materi belajar ini, diurutkan menurut a
 
 **Data drift**: perubahan pola data dari waktu ke waktu sehingga model perlu diperbarui. (10)
 
+**Data prediksi**: data yang jawabannya **belum diketahui** dan dipakai untuk menghasilkan prediksi, bukan untuk melatih/menguji model. Di proyek ini: 794 mahasiswa Enrolled. (5, 7)
+
 **Data leakage**: informasi dari luar data latih (data uji/masa depan) ikut masuk ke pelatihan. (5)
 
 **DataFrame**: struktur tabel di pandas. (2)
@@ -76,11 +78,13 @@ Kamus istilah yang dipakai di proyek dan materi belajar ini, diurutkan menurut a
 
 **Dropout**: mahasiswa yang keluar sebelum menyelesaikan studi. Target proyek ini.
 
+**Enrolled**: status mahasiswa yang masih terdaftar di akhir masa studi normal; status akhirnya (lulus/dropout) belum diketahui, sehingga tidak dipakai sebagai label. (3, 5)
+
 **EDA (Exploratory Data Analysis)**: proses menjelajahi data dengan statistik ringkas dan visualisasi sebelum membuat model. (0, 4)
 
 **Encoding**: mengubah kategori menjadi angka yang bisa diproses model. (5)
 
-**F1-score**: rata-rata harmonik precision dan recall. Proyek ini: 0,818. (7)
+**F1-score**: rata-rata harmonik precision dan recall. Proyek ini: 0,907. (7)
 
 **False Negative (FN)**: mahasiswa yang akan dropout tetapi diprediksi aman. Kesalahan paling mahal di proyek ini. (7)
 
@@ -120,7 +124,7 @@ Kamus istilah yang dipakai di proyek dan materi belajar ini, diurutkan menurut a
 
 **Insight**: kesimpulan bermakna dari data: temuan + angka + perbandingan + implikasi. (0)
 
-**Intercept**: konstanta dalam model linier (b₀ = −0,181). (6)
+**Intercept**: konstanta dalam model linier (b₀ = +0,302). (6)
 
 **IQR (Interquartile Range)**: Q3 − Q1. (4)
 
@@ -130,7 +134,7 @@ Kamus istilah yang dipakai di proyek dan materi belajar ini, diurutkan menurut a
 
 **L1 / L2 regularization**: hukuman terhadap koefisien besar. L1 bisa membuat koefisien nol. (6, 11)
 
-**Label**: nilai target yang sudah diketahui. (0)
+**Label**: nilai target yang sudah diketahui dan **final**. Label yang belum final membuat target ambigu. (0, 5, 10)
 
 **Log-loss (cross-entropy)**: fungsi error yang diminimalkan Logistic Regression. (6)
 
@@ -160,6 +164,8 @@ Kamus istilah yang dipakai di proyek dan materi belajar ini, diurutkan menurut a
 
 **pandas**: library Python untuk mengolah data tabel. (2)
 
+**Pergeseran populasi (distribution shift)**: data yang diprediksi punya karakter berbeda dari data latih. Contoh: mahasiswa Enrolled vs data latih Dropout/Graduate. (7, 10)
+
 **Parameter**: nilai yang dipelajari model dari data (koefisien). (6)
 
 **Permutation importance**: mengukur kepentingan fitur dengan mengacak nilainya dan melihat penurunan skor. (7)
@@ -174,7 +180,7 @@ Kamus istilah yang dipakai di proyek dan materi belajar ini, diurutkan menurut a
 
 **PostgreSQL**: sistem database relasional open-source. (9)
 
-**Precision**: dari yang diprediksi positif, berapa yang benar positif. Proyek ini: 0,805. (7)
+**Precision**: dari yang diprediksi positif, berapa yang benar positif. Proyek ini: 0,891. (7)
 
 **Preprocessing**: mengubah format data agar siap dipakai model. (0, 5)
 
@@ -186,7 +192,7 @@ Kamus istilah yang dipakai di proyek dan materi belajar ini, diurutkan menurut a
 
 **`random_state`**: angka acak tetap agar hasil bisa diulang. (5)
 
-**Recall (sensitivity)**: dari yang benar-benar positif, berapa yang tertangkap. Proyek ini: 0,831. (7)
+**Recall (sensitivity)**: dari yang benar-benar positif, berapa yang tertangkap. Proyek ini: 0,923. (7)
 
 **Regularisasi**: teknik mencegah overfitting dengan menghukum model yang terlalu kompleks. (6)
 
@@ -204,7 +210,7 @@ Kamus istilah yang dipakai di proyek dan materi belajar ini, diurutkan menurut a
 
 **Sigmoid**: σ(z) = 1 / (1 + e^−z), mengubah skor menjadi probabilitas. (6)
 
-**Specificity**: dari yang benar-benar negatif, berapa yang diprediksi negatif (0,905). (7)
+**Specificity**: dari yang benar-benar negatif, berapa yang diprediksi negatif (0,928). (7)
 
 **SQL (Structured Query Language)**: bahasa untuk mengambil dan mengolah data di database. (0, 9)
 
@@ -216,17 +222,19 @@ Kamus istilah yang dipakai di proyek dan materi belajar ini, diurutkan menurut a
 
 **Streamlit**: library Python untuk membuat aplikasi web data dengan cepat. (8)
 
+**Aturan 1 standar deviasi (one-standard-error rule)**: jika beberapa model punya skor CV yang selisihnya masih dalam 1 standar deviasi, anggap setara lalu pilih yang paling sederhana. (6)
+
 **Supervised learning**: belajar dari data yang sudah berlabel. (6)
 
-**Target**: variabel yang ingin diprediksi (`is_dropout`). (0)
+**Target**: variabel yang ingin diprediksi (`is_dropout`: 1 = Dropout, 0 = Graduate). (0, 5)
 
 **Template tag**: variabel `{{...}}` dalam query SQL Metabase. (9)
 
-**Test set (data uji)**: data yang disimpan untuk penilaian akhir (885 mahasiswa). (5)
+**Test set (data uji)**: data berlabel yang disimpan untuk penilaian akhir (726 mahasiswa Dropout/Graduate). Berbeda dengan data prediksi. (5)
 
 **Threshold**: batas probabilitas untuk memutuskan kelas (default 0,5). (7)
 
-**Train set (data latih)**: data untuk melatih model (3.539 mahasiswa). (5)
+**Train set (data latih)**: data untuk melatih model (2.904 mahasiswa Dropout/Graduate). (5)
 
 **True Negative (TN) / True Positive (TP)**: prediksi negatif/positif yang benar. (7)
 

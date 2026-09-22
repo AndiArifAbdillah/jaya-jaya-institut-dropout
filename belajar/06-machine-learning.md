@@ -1,24 +1,24 @@
 # Modul 6 — Machine Learning: dari Konsep sampai Rumus
 
-> **Tujuan modul:** memahami cara kerja ketiga algoritma yang dibandingkan, terutama **Logistic Regression** sampai ke rumus dan cara membaca koefisiennya, serta memahami cross-validation dan tuning hyperparameter.
+> **Tujuan modul:** memahami cara kerja ketiga algoritma yang dibandingkan, terutama **Logistic Regression** sampai ke rumus dan cara membaca koefisiennya, serta memahami cross-validation, tuning hyperparameter, dan **cara memilih model secara jujur**.
 
 ---
 
 ## 6.1 Konsep dasar
 
 - **Machine learning** = membuat komputer menemukan pola dari data, bukan dari aturan yang ditulis manual.
-- **Supervised learning** = belajar dari contoh yang **sudah punya jawaban** (label). Di sini: 3.539 mahasiswa latih yang statusnya sudah diketahui.
-- **Klasifikasi** = memprediksi kategori (dropout / tidak). Kebalikannya adalah **regresi**, yang memprediksi angka.
-- **Fitur (X)** = input (19 kolom). **Label/target (y)** = output (`is_dropout`).
+- **Supervised learning** = belajar dari contoh yang **sudah punya jawaban** (label). Di sini: 2.904 mahasiswa latih yang status akhirnya sudah pasti (Dropout atau Graduate).
+- **Klasifikasi** = memprediksi kategori (Dropout / Graduate). Kebalikannya adalah **regresi**, yang memprediksi angka.
+- **Fitur (X)** = input (19 kolom). **Label/target (y)** = output (`is_dropout`: 1 = Dropout, 0 = Graduate).
 - **Training** = mencari parameter model yang membuat prediksi paling cocok dengan label.
-- **Inference/prediksi** = memakai model yang sudah dilatih pada data baru.
+- **Inference/prediksi** = memakai model yang sudah dilatih pada data baru. Di proyek ini: 794 mahasiswa **Enrolled**.
 
 ## 6.2 Logistic Regression — model terpilih
 
 ### Langkah 1: skor linier
 Setiap fitur (yang sudah distandardisasi) dikalikan dengan **koefisien** (bobot), lalu dijumlahkan bersama **intercept**:
 
-$$z = b_0 + w_1x_1 + w_2x_2 + \dots + w_{47}x_{47}$$
+$$z = b_0 + w_1x_1 + w_2x_2 + \dots + w_{46}x_{46}$$
 
 ### Langkah 2: fungsi sigmoid
 Skor z bisa bernilai berapa saja (−∞ sampai +∞), padahal probabilitas harus di antara 0 dan 1. Sigmoid "menekuk" z ke rentang itu:
@@ -33,7 +33,7 @@ $$p = \sigma(z) = \frac{1}{1 + e^{-z}}$$
 | +2 | 0,881 |
 | +4 | 0,982 |
 
-z = 0 menghasilkan p = 0,5, yaitu **threshold** keputusan. z positif berarti condong ke dropout.
+z = 0 menghasilkan p = 0,5, yaitu **threshold** keputusan. z positif berarti condong ke Dropout, z negatif condong ke Graduate.
 
 ### Langkah 3: log-odds, cara membaca koefisien
 **Odds** = p / (1 − p). Contoh: p = 0,8 → odds = 4, artinya "4 banding 1". Logistic regression sebenarnya memodelkan **log-odds** secara linier:
@@ -44,43 +44,45 @@ Maka: **menaikkan satu fitur sebanyak 1 standar deviasi mengubah log-odds sebesa
 
 ### Koefisien nyata dari model proyek ini
 
-Intercept (b₀) = −0,181. Beberapa koefisien (per 1 std):
+Intercept (b₀) = +0,302. Beberapa koefisien (per 1 std):
 
 | Fitur | Koefisien | Odds ratio (e^w) | Artinya |
 |---|---|---|---|
-| MK lulus semester 2 | **−1,428** | 0,24 | +1 std (≈ 3 MK lebih banyak lulus) → odds dropout tinggal **24%** |
-| MK diambil semester 2 | **+0,807** | 2,24 | lihat penjelasan di bawah |
-| MK lulus semester 1 | −0,679 | 0,51 | |
-| Biaya kuliah lunas | −0,661 | 0,52 | per 1 std (0,32); dari 0→1 ≈ 3,1 std → odds × **0,13** (≈ 8× lebih kecil) |
-| Rata-rata nilai semester 2 | −0,417 | 0,66 | |
-| Usia saat mendaftar | +0,282 | 1,33 | +7,4 tahun → odds naik 33% |
-| Beasiswa | −0,225 | 0,80 | |
-| Debtor | +0,199 | 1,22 | |
-| Gender (laki-laki) | +0,167 | 1,18 | |
-| Prodi Social Service (9238) | −0,498 | 0,61 | dibanding rata-rata prodi |
-| Prodi Basic Education (9853) | +0,571 | 1,77 | |
+| MK lulus semester 2 | **−1,974** | 0,14 | +1 std (≈ 3 MK lebih banyak lulus) → odds dropout tinggal **14%** |
+| MK lulus semester 1 | −1,222 | 0,30 | |
+| MK diambil semester 2 | **+0,909** | 2,48 | lihat penjelasan di bawah |
+| MK diambil semester 1 | +0,755 | 2,13 | |
+| Biaya kuliah lunas | −0,694 | 0,50 | per 1 std (0,34); dari 0→1 ≈ 2,9 std → odds × **0,13** (≈ 7,7× lebih kecil) |
+| Rata-rata nilai semester 2 | −0,604 | 0,55 | |
+| Debtor | +0,345 | 1,41 | |
+| Beasiswa | −0,306 | 0,74 | |
+| Gender (laki-laki) | +0,196 | 1,22 | |
+| Usia saat mendaftar | +0,160 | 1,17 | +7,9 tahun → odds naik 17% |
+| Prodi Basic Education (9853) | +0,743 | 2,10 | dibanding rata-rata prodi |
+| Prodi Informatics Engineering (9119) | +0,518 | 1,68 | |
+| Prodi Social Service (9238) | −0,579 | 0,56 | |
 
-**Teka-teki: kenapa "MK diambil semester 2" koefisiennya positif?** Bukankah mengambil lebih banyak mata kuliah itu baik? Kuncinya ada di frasa *"fitur lain dibuat tetap"*. Jika jumlah MK **lulus** tetap, menambah MK **diambil** berarti menambah MK yang **gagal**. Jadi kedua koefisien bekerja **berpasangan** untuk menangkap **approval rate**, yaitu fitur paling kuat dari EDA (r = −0,66). Model menemukan konsep "rasio kelulusan" sendiri dari dua kolom mentah.
+**Teka-teki: kenapa "MK diambil" koefisiennya positif?** Bukankah mengambil lebih banyak mata kuliah itu baik? Kuncinya ada di frasa *"fitur lain dibuat tetap"*. Jika jumlah MK **lulus** tetap, menambah MK **diambil** berarti menambah MK yang **gagal**. Jadi pasangan koefisien "lulus" (negatif) dan "diambil" (positif) bekerja **berpasangan** untuk menangkap **approval rate**, yaitu fitur paling kuat dari EDA (r = −0,66). Model menemukan konsep "rasio kelulusan" sendiri dari kolom-kolom mentah.
 
 > ⚠️ Karena fitur-fitur akademik saling berkorelasi (*multikolinearitas*), koefisien satu per satu bisa terlihat aneh. Baca koefisien **berkelompok**, jangan terpisah.
 
 ### Contoh hitung prediksi
 
-Mahasiswa pada baris ke-5 `sample_students.csv`: berusia 19 tahun, biaya kuliah lunas, tidak menunggak, tetapi **0 mata kuliah lulus** di semester 1 dan 2.
+Mahasiswa Enrolled pertama di `data_enrolled.csv`: berusia 18 tahun, prodi Social Service, biaya kuliah lunas, tidak menunggak. Tetapi di semester 1 ia hanya lulus **1 dari 6** mata kuliah, dan di semester 2 **2 dari 6**.
 
-- Total skor: z = −0,181 + Σ(wᵢ·xᵢ) = **4,118**
-- p = 1 / (1 + e^−4,118) = **0,984** → **98% risiko dropout**
+- Total skor: z = 0,302 + Σ(wᵢ·xᵢ) = **2,587**
+- p = 1 / (1 + e^−2,587) = **0,930** → **93% risiko dropout**
 
-Pelajaran: kondisi finansial yang baik **tidak bisa** mengimbangi kegagalan akademik total, karena koefisien akademik jauh lebih besar.
+Pelajaran: kondisi finansial yang baik dan prodi berisiko rendah (Social Service) **tidak cukup** mengimbangi kegagalan akademik, karena koefisien akademik jauh lebih besar.
 
 Coba sendiri di notebook:
 
 ```python
 import numpy as np
-row = sample.iloc[[4]]
+row = df_enrolled[SELECTED_FEATURES].iloc[[0]]
 pre, lr = best_model.named_steps["preprocessor"], best_model.named_steps["model"]
 z = lr.intercept_[0] + np.asarray(pre.transform(row))[0] @ lr.coef_[0]
-print(z, 1 / (1 + np.exp(-z)), best_model.predict_proba(row)[0, 1])   # 4.118  0.984  0.984
+print(z, 1 / (1 + np.exp(-z)), best_model.predict_proba(row)[0, 1])   # 2.587  0.930  0.930
 ```
 
 ### Bagaimana model "belajar"?
@@ -100,14 +102,14 @@ $$\text{Loss} = \text{LogLoss} + \frac{1}{C}\sum w_i^2$$
 - GridSearch mencoba C ∈ {0,01; 0,1; 1; 10}, dan **C = 0,1** memberi CV F1 terbaik.
 
 ### `class_weight="balanced"`
-Tanpa pembobotan, model cenderung mengutamakan kelas mayoritas (tidak dropout). Bobot `balanced` = n_total / (2 × n_kelas):
+Data latih berisi 39% dropout dan 61% graduate. Tanpa pembobotan, model cenderung mengutamakan kelas mayoritas. Bobot `balanced` = n_total / (2 × n_kelas):
 
 | Kelas | n (data latih) | Bobot |
 |---|---|---|
-| Dropout | 1.137 | 3.539 / (2 × 1.137) = **1,556** |
-| Tidak dropout | 2.402 | 3.539 / (2 × 2.402) = **0,737** |
+| Dropout | 1.137 | 2.904 / (2 × 1.137) = **1,277** |
+| Graduate | 1.767 | 2.904 / (2 × 1.767) = **0,822** |
 
-Kesalahan pada mahasiswa dropout "dihitung" **±2,1 kali lebih mahal**. Dampaknya recall naik, sesuai tujuan bisnis.
+Kesalahan pada mahasiswa dropout "dihitung" **±1,55 kali lebih mahal**. Dampaknya recall naik, sesuai tujuan bisnis.
 
 ## 6.3 Decision Tree → Random Forest
 
@@ -136,8 +138,8 @@ Hyperparameter yang dituning: `max_depth` ∈ {None, 10, 20} dan `min_samples_le
 Kebalikan dari Random Forest: pohon-pohon kecil dibangun **berurutan**, dan setiap pohon baru fokus **memperbaiki kesalahan** pohon sebelumnya.
 
 - `learning_rate` = seberapa besar kontribusi setiap pohon (kecil = lebih hati-hati, butuh lebih banyak pohon).
-- Hasil terbaik: **learning_rate=0,05, max_depth=2, n_estimators=200**.
-- `GradientBoostingClassifier` di scikit-learn **tidak punya** `class_weight`. Karena itu recall-nya paling rendah (0,73): model cenderung bermain aman ke kelas mayoritas.
+- Hasil terbaik: **learning_rate=0,05, max_depth=3, n_estimators=200**.
+- `GradientBoostingClassifier` di scikit-learn **tidak punya** `class_weight`. Karena itu recall-nya paling rendah (CV recall 0,832): model cenderung bermain aman ke kelas mayoritas.
 
 ## 6.5 Overfitting vs underfitting
 
@@ -157,10 +159,10 @@ Fold 2: [train][TEST ][train][train][train]
 Fold 3: [train][train][TEST ][train][train]
 Fold 4: [train][train][train][TEST ][train]
 Fold 5: [train][train][train][train][TEST ]
-→ skor akhir = rata-rata 5 skor
+→ skor akhir = rata-rata 5 skor (± standar deviasinya)
 ```
 
-`StratifiedKFold(n_splits=5, shuffle=True, random_state=42)` menjaga proporsi dropout sama di setiap fold.
+`StratifiedKFold(n_splits=5, shuffle=True, random_state=42)` menjaga proporsi dropout sama di setiap fold. **Standar deviasi** antar-fold menunjukkan seberapa "goyang" skornya. Angka ini penting untuk memilih model (bagian 6.8).
 
 ## 6.7 GridSearchCV: mencari hyperparameter terbaik
 
@@ -174,40 +176,67 @@ GridSearchCV mencoba **setiap kombinasi** dan menilainya dengan 5-fold CV:
 | Random Forest | max_depth 3 × min_samples_leaf 3 | 9 | 45 |
 | Gradient Boosting | n_estimators 2 × learning_rate 2 × max_depth 2 | 8 | 40 |
 
-Setelah itu, kombinasi terbaik **dilatih ulang pada seluruh data latih** (`refit=True`, default).
+```python
+GridSearchCV(pipe, grid, scoring={"f1": "f1", "recall": "recall"}, refit="f1", cv=cv)
+```
+Dua metrik dicatat sekaligus. `refit="f1"` berarti kombinasi terbaik dipilih berdasarkan F1, lalu **dilatih ulang pada seluruh data latih**.
 
-**Hasil (CV F1 di data latih):**
+**Hasil (cross-validation di data latih):**
 
-| Model | CV F1 | Parameter terbaik |
-|---|---|---|
-| **Logistic Regression** | **0,7930** | C = 0,1 |
-| Random Forest | 0,7915 | max_depth=None, min_samples_leaf=3 |
-| Gradient Boosting | 0,7788 | learning_rate=0,05, max_depth=2, n_estimators=200 |
+| Model | CV F1 | ± std | CV Recall | Parameter terbaik |
+|---|---|---|---|---|
+| **Logistic Regression** | 0,8723 | **±0,0111** | **0,8540** | C = 0,1 |
+| Random Forest | 0,8685 | ±0,0169 | 0,8364 | max_depth=None, min_samples_leaf=3 |
+| Gradient Boosting | **0,8733** | ±0,0206 | 0,8320 | learning_rate=0,05, max_depth=3, n_estimators=200 |
 
-## 6.8 Kenapa model paling sederhana yang menang?
+## 6.8 ⭐ Memilih model secara jujur: aturan "1 standar deviasi"
 
-1. **Polanya memang sebagian besar linier**: semakin sedikit MK lulus, semakin berisiko, konsisten tanpa pola rumit.
-2. **Datanya tidak besar** (±3.500 baris latih). Model kompleks lebih mudah overfit di data kecil.
+Sekilas Gradient Boosting "menang" (CV F1 0,8733). Tapi selisihnya dengan Logistic Regression hanya **0,001**, jauh lebih kecil dari standar deviasi antar-fold (±0,011 sampai ±0,021). Artinya perbedaan itu **tidak bermakna**. Jika pembagian fold diacak ulang, urutannya bisa berubah.
+
+Karena itu notebook memakai aturan yang transparan:
+1. Cari CV F1 tertinggi beserta standar deviasinya.
+2. Model yang CV F1-nya dalam rentang **1 std** dari yang tertinggi dianggap **setara secara statistik**.
+3. Di antara yang setara, pilih yang **paling sederhana dan mudah dijelaskan** (LR → RF → GB).
+
+```python
+SIMPLICITY_ORDER = ["Logistic Regression", "Random Forest", "Gradient Boosting"]
+top_name = results["CV F1"].idxmax()                                   # Gradient Boosting
+tolerance = results.loc[top_name, "CV F1 std"]                        # 0,0206
+equivalent = [m for m in SIMPLICITY_ORDER
+              if results.loc[m, "CV F1"] >= results.loc[top_name, "CV F1"] - tolerance]
+best_name = equivalent[0]                                              # Logistic Regression
+```
+
+Aturan ini **tidak melihat data uji sama sekali**, jadi data uji tetap menjadi penilaian akhir yang jujur. Logistic Regression juga punya **CV recall tertinggi** dan **variasi terkecil**, dua hal yang mendukung pilihannya secara bisnis.
+
+> 💡 Ini versi sederhana dari **"one-standard-error rule"** yang dikenal di statistika: jika beberapa model sama baiknya dalam batas ketidakpastian, pilih yang paling sederhana.
+
+## 6.9 Kenapa model paling sederhana layak dipilih?
+
+1. **Polanya memang sebagian besar linier**: semakin sedikit MK lulus, semakin berisiko, konsisten tanpa pola rumit. Ketiga model mencapai ROC-AUC ±0,97.
+2. **Datanya tidak besar** (±2.900 baris latih). Model kompleks lebih mudah overfit di data kecil.
 3. **Bonus bisnis: mudah dijelaskan.** Koefisien bisa diterjemahkan menjadi "faktor yang menaikkan/menurunkan risiko", dan itulah yang ditampilkan di aplikasi ([Modul 8](08-aplikasi-streamlit.md)). Untuk keputusan yang menyangkut manusia (mahasiswa), kemampuan dijelaskan (*explainability*) sangat berharga.
 
 ---
 
 ## ✍️ Cek pemahaman
 
-1. Jika z = 0, berapa probabilitas dropout? Jika z = −1,428?
-2. Jelaskan dengan kalimat sendiri arti koefisien −1,428 pada "MK lulus semester 2".
+1. Jika z = 0, berapa probabilitas dropout? Jika z = −1,974?
+2. Jelaskan dengan kalimat sendiri arti koefisien −1,974 pada "MK lulus semester 2".
 3. Kenapa koefisien "MK diambil semester 2" positif?
 4. Apa bedanya parameter dan hyperparameter? Beri contoh dari proyek ini.
-5. Kenapa Gradient Boosting punya recall paling rendah?
+5. Gradient Boosting punya CV F1 tertinggi. Kenapa yang dipilih Logistic Regression?
+6. Kenapa Gradient Boosting punya recall paling rendah?
 
 <details>
 <summary>Lihat jawaban</summary>
 
-1. z = 0 → p = 0,5. z = −1,428 → p = 1 / (1 + e^1,428) = 1 / (1 + 4,17) ≈ **0,193**.
-2. Dengan fitur lain tetap, setiap tambahan ±3 mata kuliah lulus di semester 2 (1 std) mengalikan odds dropout dengan 0,24, atau menurunkannya ±76%.
+1. z = 0 → p = 0,5. z = −1,974 → p = 1 / (1 + e^1,974) = 1 / (1 + 7,20) ≈ **0,122**.
+2. Dengan fitur lain tetap, setiap tambahan ±3 mata kuliah lulus di semester 2 (1 std) mengalikan odds dropout dengan 0,14, atau menurunkannya ±86%.
 3. Dengan jumlah MK lulus tetap, menambah MK diambil berarti menambah MK yang gagal. Kedua koefisien bersama-sama menangkap rasio kelulusan.
 4. Parameter dipelajari dari data (koefisien Logistic Regression, isi pohon). Hyperparameter ditentukan sebelum pelatihan (C = 0,1, max_depth, learning_rate).
-5. Karena tidak memakai pembobotan kelas, model cenderung memprediksi kelas mayoritas (tidak dropout), sehingga lebih banyak mahasiswa dropout yang terlewat.
+5. Selisihnya hanya 0,001, jauh lebih kecil dari standar deviasi antar-fold (±0,02), jadi ketiga model setara secara statistik. Di antara yang setara dipilih yang paling sederhana dan mudah dijelaskan, yang juga punya CV recall tertinggi.
+6. Karena tidak memakai pembobotan kelas, model cenderung memprediksi kelas mayoritas (Graduate), sehingga lebih banyak mahasiswa dropout yang terlewat.
 </details>
 
 ➡️ Lanjut ke [Modul 7 — Evaluasi model](07-evaluasi-model.md)

@@ -1,30 +1,56 @@
 # Modul 5 — Persiapan Data (Data Preparation)
 
-> **Tujuan modul:** memahami setiap langkah yang mengubah data mentah menjadi input model: perumusan target, seleksi fitur, pembagian data, encoding, scaling, dan pipeline. Modul ini juga membahas **data leakage**, kesalahan paling berbahaya dalam machine learning.
+> **Tujuan modul:** memahami setiap langkah yang mengubah data mentah menjadi input model: **pemisahan data pemodelan vs data prediksi**, perumusan target, seleksi fitur, pembagian data, encoding, scaling, dan pipeline. Modul ini juga membahas **data leakage**, kesalahan paling berbahaya dalam machine learning.
 
 ---
 
-## 5.1 Merumuskan target: keputusan desain pertama
+## 5.1 Merumuskan target: keputusan desain pertama (dan pelajaran dari review)
 
-Kolom `Status` punya 3 nilai. Setidaknya ada 3 cara merumuskan masalahnya:
+Kolom `Status` punya 3 nilai: `Dropout`, `Graduate`, dan `Enrolled`. Setidaknya ada 3 cara merumuskan masalahnya:
 
 | Opsi | Target | Kelebihan | Kekurangan |
 |---|---|---|---|
-| A. Multikelas | Dropout / Enrolled / Graduate | informasi lengkap | Enrolled paling sulit ditebak; metrik lebih rumit; bukan pertanyaan bisnis utama |
-| B. Buang Enrolled | Dropout vs Graduate | label "bersih" | membuang 794 data (18%); model tidak pernah belajar tentang mahasiswa terlambat |
-| **C. Dipilih ✅** | **Dropout (1) vs Tidak Dropout (0)** | langsung menjawab "siapa yang akan dropout?"; memakai semua data | Enrolled (26,4% dari kelas 0) mungkin sebagian nanti dropout → sedikit "noise" label |
+| A. Multikelas | Dropout / Enrolled / Graduate | informasi lengkap | "Enrolled" bukan hasil akhir; metrik lebih rumit |
+| **B. Dipakai sekarang ✅** | **Dropout (1) vs Graduate (0)**; Enrolled dipisahkan sebagai **data prediksi** | label **pasti dan tidak ambigu**; mencerminkan cara sistem dipakai di dunia nyata | data latih berkurang 794 baris |
+| C. Versi awal ❌ | Dropout (1) vs "Tidak Dropout" (Graduate + Enrolled = 0) | memakai semua data | **target ambigu**: sebagian Enrolled mungkin kelak dropout, tetapi model diajari bahwa mereka "tidak dropout" |
+
+### 📌 Kisah nyata proyek ini
+Versi pertama proyek memakai **opsi C**, dan submission-nya **ditolak reviewer Dicoding** dengan alasan:
+
+> Enrolled tidak seharusnya dilibatkan dalam training, karena tujuannya memprediksi apakah mahasiswa akan **Dropout atau Graduate**. Menyamakan Graduate dan Enrolled menjadi 0 membuat target **ambigu** dan dapat menurunkan validitas model.
+
+Kenapa reviewer benar? Mahasiswa `Enrolled` **belum punya status akhir**. Jika mereka diberi label 0, sebagian label itu **salah**: mahasiswa yang kelak dropout ikut diajarkan ke model sebagai "tidak dropout". Model belajar dari **label yang kotor**.
+
+**Buktinya ada di data:** pada model versi lama, **42 dari 57 false positive** adalah mahasiswa Enrolled. Model menilai mereka mirip mahasiswa dropout (dan mungkin memang benar), tetapi karena labelnya 0, hal itu dihitung sebagai "kesalahan". Label yang ambigu mengacaukan proses belajar **dan** proses evaluasi.
+
+Perbaikannya (opsi B):
 
 ```python
-df["is_dropout"] = (df["Status"] == "Dropout").astype(int)
-y = df["is_dropout"]        # 1.421 bernilai 1, 3.003 bernilai 0
+df_model = df[df["Status"].isin(["Dropout", "Graduate"])].copy()   # status akhir sudah pasti
+df_enrolled = df[df["Status"] == "Enrolled"].copy()                  # status akhir belum diketahui → diprediksi
+
+TARGET = "is_dropout"          # 1 = Dropout, 0 = Graduate
+y = df_model[TARGET]           # 1.421 bernilai 1, 2.209 bernilai 0 (39,15% dropout)
 ```
 
-> 💡 **Prinsip:** rumuskan target sesuai **keputusan yang akan diambil** oleh pengguna. Staf akademik perlu tahu *"siapa yang harus saya dampingi?"*, dan itu pertanyaan ya/tidak.
+```mermaid
+flowchart LR
+    D[data.csv<br/>4.424 mahasiswa] --> M[df_model<br/>Dropout + Graduate<br/>3.630]
+    D --> E[df_enrolled<br/>Enrolled<br/>794]
+    M --> T[train 2.904 / test 726<br/>→ latih & evaluasi model]
+    T --> BM[Model terbaik]
+    BM --> P[Prediksi risiko<br/>794 mahasiswa aktif]
+    E --> P
+```
+
+Dampaknya justru **positif**: F1 naik dari 0,818 menjadi **0,907**, dan ROC-AUC dari 0,930 menjadi **0,973**. Label yang bersih membuat pola dropout vs lulus lebih tegas.
+
+> 💡 **Prinsip:** data latih hanya boleh berisi contoh yang **jawabannya sudah pasti**. Data yang jawabannya belum diketahui adalah **data yang akan diprediksi**, bukan data untuk belajar.
 
 ## 5.2 Seleksi fitur: dari 36 menjadi 19
 
 **Kriteria pemilihan:**
-1. **Relevan**: berbeda jelas antara mahasiswa dropout dan tidak (lihat hasil EDA).
+1. **Relevan**: berbeda jelas antara mahasiswa dropout dan lulus (lihat hasil EDA).
 2. **Tersedia dan bisa dipantau** oleh institusi.
 3. **Praktis diinput** di aplikasi. Form dengan 36 isian akan melelahkan staf.
 
@@ -41,12 +67,12 @@ y = df["is_dropout"]        # 1.421 bernilai 1, 3.003 bernilai 0
 - Kategori (2): `Application_mode`, `Course`
 - Numerik/biner (17): `Daytime_evening_attendance`, `Previous_qualification_grade`, `Admission_grade`, `Displaced`, `Debtor`, `Tuition_fees_up_to_date`, `Gender`, `Scholarship_holder`, `Age_at_enrollment`, serta `enrolled`, `evaluations`, `approved`, `grade` untuk semester 1 dan 2.
 
-**Pembuktian dengan eksperimen** (5-fold cross-validation, Logistic Regression):
+**Pembuktian dengan eksperimen** (5-fold cross-validation pada data Dropout vs Graduate, Logistic Regression):
 
 | Set fitur | Jumlah | F1 | Recall | ROC-AUC |
 |---|---|---|---|---|
-| Seluruh fitur | 36 | 0,795 | 0,821 | 0,922 |
-| **Fitur terpilih** | **19** | **0,795** | 0,813 | 0,917 |
+| Seluruh fitur | 36 | 0,878 | 0,868 | 0,954 |
+| **Fitur terpilih** | **19** | **0,880** | 0,868 | 0,953 |
 
 Hasilnya praktis sama, tapi modelnya jauh lebih sederhana. Seleksi fitur yang baik **tidak hanya berdasarkan intuisi**, tetapi dibuktikan dengan angka.
 
@@ -55,19 +81,22 @@ Hasilnya praktis sama, tapi modelnya jauh lebih sederhana. Seleksi fitur yang ba
 ## 5.3 Membagi data: train dan test
 
 ```python
+X = df_model[SELECTED_FEATURES]
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, stratify=y, random_state=42)
 ```
 
 | Parameter | Arti |
 |---|---|
-| `test_size=0.2` | 20% data (885 mahasiswa) disimpan untuk ujian akhir, 80% (3.539) untuk belajar |
-| `stratify=y` | proporsi dropout di train dan test **sama**: 32,13% vs 32,09% |
+| `test_size=0.2` | 20% data (726 mahasiswa) disimpan untuk ujian akhir, 80% (2.904) untuk belajar |
+| `stratify=y` | proporsi dropout di train dan test **sama**: 39,15% vs 39,12% |
 | `random_state=42` | pengacakan bisa diulang dengan hasil sama (*reproducible*) |
 
 **Kenapa perlu data uji?** Model harus dinilai pada data yang **belum pernah dilihatnya**, sama seperti ujian yang soalnya berbeda dari latihan. Kalau dinilai pada data latih, skornya akan terlalu optimis.
 
-Jumlah persisnya: data latih berisi 1.137 dropout dan 2.402 tidak dropout. Data uji berisi 284 dropout dan 601 tidak dropout.
+Jumlah persisnya: data latih berisi 1.137 dropout dan 1.767 graduate. Data uji berisi 284 dropout dan 442 graduate.
+
+> Perhatikan perbedaan **data uji** dan **data prediksi**: data uji (726) **punya jawaban**, dipakai untuk mengukur performa. Data prediksi (794 Enrolled) **belum punya jawaban**, dipakai untuk menghasilkan peringatan.
 
 ## 5.4 ⚠️ Data leakage: kebocoran informasi
 
@@ -82,7 +111,7 @@ X_train, X_test = train_test_split(...)
 ```
 Rata-rata data uji ikut "bocor" ke data latih. Solusinya: fit scaler **hanya pada data latih**. Di proyek ini hal itu dijamin oleh **Pipeline** (bagian 5.7). Di dalam cross-validation pun, pipeline di-fit ulang di setiap fold hanya dengan data fold latih.
 
-**2. Leakage waktu (target leakage).** Fitur yang baru tersedia **setelah** atau **bersamaan dengan** kejadian yang ingin diprediksi. Model ini memakai data **semester 2**. Artinya model baru bisa dipakai **setelah semester 2 selesai**, bukan saat mahasiswa baru masuk. Ini bukan kesalahan, tetapi batasan penting yang harus disampaikan dengan jujur ([Modul 10](10-bisnis-kesimpulan-etika.md)). Model yang hanya memakai data semester 1 masih mencapai F1 0,778 (lihat notebook, *Evaluation → 4. Model deteksi dini*), jadi deteksi bisa dilakukan satu semester lebih awal dengan sedikit penurunan akurasi.
+**2. Leakage waktu (target leakage).** Fitur yang baru tersedia **setelah** atau **bersamaan dengan** kejadian yang ingin diprediksi. Model ini memakai data **semester 2**. Artinya model baru bisa dipakai **setelah semester 2 selesai**, bukan saat mahasiswa baru masuk. Ini bukan kesalahan, tetapi batasan penting yang harus disampaikan dengan jujur ([Modul 10](10-bisnis-kesimpulan-etika.md)). Model yang hanya memakai data semester 1 masih mencapai **F1 0,857** (lihat notebook, *Evaluation → 4. Model deteksi dini*), jadi deteksi bisa dilakukan satu semester lebih awal dengan sedikit penurunan akurasi.
 
 ## 5.5 One-Hot Encoding untuk kategori
 
@@ -104,13 +133,13 @@ OneHotEncoder(handle_unknown="infrequent_if_exist", min_frequency=20)
 
 $$z = \frac{x - \text{mean}}{\text{std}}$$
 
-Mean dan std dihitung dari **data latih**. Contoh nyata dari model yang tersimpan:
+Mean dan std dihitung dari **data latih** (2.904 mahasiswa Dropout + Graduate). Contoh nyata dari model yang tersimpan:
 
 | Fitur | Mean | Std | Contoh x | z |
 |---|---|---|---|---|
-| `Admission_grade` | 126,99 | 14,55 | 150 | (150 − 126,99) / 14,55 = **+1,58** |
-| `Age_at_enrollment` | 23,19 | 7,42 | 29 | (29 − 23,19) / 7,42 = **+0,78** |
-| `Curricular_units_2nd_sem_approved` | 4,41 | 2,99 | 0 | (0 − 4,41) / 2,99 = **−1,47** |
+| `Admission_grade` | 127,34 | 14,65 | 150 | (150 − 127,34) / 14,65 = **+1,55** |
+| `Age_at_enrollment` | 23,48 | 7,85 | 29 | (29 − 23,48) / 7,85 = **+0,70** |
+| `Curricular_units_2nd_sem_approved` | 4,55 | 3,14 | 0 | (0 − 4,55) / 3,14 = **−1,45** |
 
 **Kenapa perlu scaling untuk Logistic Regression?**
 1. Regularisasi (parameter `C`) menghukum besarnya koefisien. Tanpa scaling, fitur berskala besar (nilai masuk 95–190) dan kecil (biner 0/1) diperlakukan tidak adil.
@@ -139,23 +168,23 @@ flowchart LR
     R[Data mentah<br/>19 kolom] --> CT{ColumnTransformer}
     CT -->|Application_mode, Course| OH[OneHotEncoder]
     CT -->|17 kolom numerik| SS[StandardScaler]
-    OH --> J[47 kolom]
+    OH --> J[46 kolom]
     SS --> J
     J --> M[LogisticRegression]
     M --> P[Probabilitas dropout]
 ```
 
-- **ColumnTransformer** memberi perlakuan berbeda untuk kolom yang berbeda, lalu menggabungkan hasilnya. 2 kolom kategori menjadi 30 kolom one-hot, ditambah 17 kolom numerik, **total 47 fitur**.
+- **ColumnTransformer** memberi perlakuan berbeda untuk kolom yang berbeda, lalu menggabungkan hasilnya. 2 kolom kategori menjadi 29 kolom one-hot, ditambah 17 kolom numerik, **total 46 fitur**.
 - **Pipeline** merangkai langkah-langkah itu menjadi **satu objek**:
   - `pipe.fit(X_train, y_train)`: fit encoder dan scaler **hanya** pada data latih, lalu melatih model.
-  - `pipe.predict_proba(X_baru)`: otomatis menerapkan transformasi yang sama, lalu memprediksi.
+  - `pipe.predict_proba(X_baru)`: otomatis menerapkan transformasi yang sama, lalu memprediksi. Inilah yang dipakai untuk memprediksi 794 mahasiswa Enrolled.
   - Disimpan sebagai satu file (`model.joblib`), sehingga **aplikasi cukup memberi data mentah**.
 
 Nama fitur hasil transformasi bisa dilihat dengan `pipe.named_steps["preprocessor"].get_feature_names_out()`. Formatnya `categorical__Course_9500` dan `numerical__Admission_grade`.
 
 ## 5.8 Dataset khusus dashboard
 
-Model butuh angka, tetapi **manusia butuh label**. Karena itu notebook membuat `df_dashboard`:
+Model butuh angka, tetapi **manusia butuh label**. Karena itu notebook membuat `df_dashboard`. Dashboard memakai **seluruh 4.424 mahasiswa** (termasuk Enrolled), karena tujuannya memantau kondisi semua mahasiswa, bukan melatih model.
 
 ```python
 "course": df["Course"].map(COURSE_MAP),                    # 9500 → "Nursing"
@@ -180,20 +209,24 @@ df_dashboard.to_sql("students", engine, if_exists="replace", index=False)
 
 ## ✍️ Cek pemahaman
 
-1. Kenapa `stratify=y` penting pada data yang tidak seimbang?
-2. Berikan contoh data leakage yang mungkin terjadi jika Anda menghitung `StandardScaler` sebelum `train_test_split`.
-3. Sebuah prodi baru dengan kode 9999 dimasukkan ke aplikasi. Apa yang terjadi di one-hot encoder?
-4. Mahasiswa berusia 18 tahun. Berapa nilai z-nya?
-5. Kenapa 2 kolom kategori bisa menjadi 30 kolom, bukan 17 + 18 = 35?
+1. Kenapa mahasiswa Enrolled tidak boleh diberi label 0 saat melatih model?
+2. Apa beda **data uji** dan **data prediksi** di proyek ini?
+3. Kenapa `stratify=y` penting pada data yang tidak seimbang?
+4. Berikan contoh data leakage yang mungkin terjadi jika Anda menghitung `StandardScaler` sebelum `train_test_split`.
+5. Sebuah prodi baru dengan kode 9999 dimasukkan ke aplikasi. Apa yang terjadi di one-hot encoder?
+6. Mahasiswa berusia 18 tahun. Berapa nilai z-nya?
+7. Kenapa 2 kolom kategori bisa menjadi 29 kolom, bukan 17 + 18 = 35?
 
 <details>
 <summary>Lihat jawaban</summary>
 
-1. Tanpa stratify, pembagian acak bisa kebetulan membuat proporsi dropout di test jauh berbeda (misalnya 28% vs 35%), sehingga evaluasi tidak mewakili kondisi sebenarnya.
-2. Mean dan std dihitung dari seluruh data, termasuk data uji. Informasi tentang sebaran data uji "bocor" ke data latih, sehingga skor evaluasi sedikit terlalu optimis.
-3. Kode itu dimasukkan ke kolom `infrequent` (karena `handle_unknown="infrequent_if_exist"`), jadi tidak terjadi error.
-4. (18 − 23,19) / 7,42 ≈ **−0,70**.
-5. Karena `min_frequency=20`: kategori langka digabung menjadi satu kolom `infrequent` per fitur, sehingga jumlah kolomnya berkurang.
+1. Status akhirnya belum diketahui. Sebagian dari mereka mungkin kelak dropout, sehingga label 0 bisa salah. Model akan belajar dari label kotor (target ambigu), dan validitasnya turun.
+2. Data uji (726 mahasiswa Dropout/Graduate) **punya jawaban** dan dipakai untuk mengukur performa model. Data prediksi (794 mahasiswa Enrolled) **belum punya jawaban** dan dipakai untuk menghasilkan peringatan dini.
+3. Tanpa stratify, pembagian acak bisa kebetulan membuat proporsi dropout di test jauh berbeda (misalnya 35% vs 43%), sehingga evaluasi tidak mewakili kondisi sebenarnya.
+4. Mean dan std dihitung dari seluruh data, termasuk data uji. Informasi tentang sebaran data uji "bocor" ke data latih, sehingga skor evaluasi sedikit terlalu optimis.
+5. Kode itu dimasukkan ke kolom `infrequent` (karena `handle_unknown="infrequent_if_exist"`), jadi tidak terjadi error.
+6. (18 − 23,48) / 7,85 ≈ **−0,70**.
+7. Karena `min_frequency=20`: kategori langka digabung menjadi satu kolom `infrequent` per fitur, sehingga jumlah kolomnya berkurang.
 </details>
 
 ➡️ Lanjut ke [Modul 6 — Machine learning](06-machine-learning.md)

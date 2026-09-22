@@ -24,7 +24,7 @@ Institusi meminta dua hal:
 
 1. Seberapa besar tingkat dropout? → **32,1%** (hampir 1 dari 3 mahasiswa).
 2. Faktor apa yang paling berkaitan dengan dropout? → **akademik** (mata kuliah lulus & nilai), **finansial** (biaya kuliah, tunggakan, beasiswa), **profil pendaftaran** (usia, jalur masuk, prodi, kelas malam).
-3. Bagaimana mendeteksi mahasiswa berisiko? → **model Logistic Regression** dengan recall 83%.
+3. Bagaimana mendeteksi mahasiswa berisiko? → **model Logistic Regression** yang dilatih dari mahasiswa Dropout vs Graduate (recall 92%), lalu dipakai untuk memprediksi **794 mahasiswa Enrolled** (438 berisiko tinggi).
 4. Bagaimana memonitor secara berkala? → **dashboard Metabase** dengan filter interaktif.
 
 > 💡 **Pelajaran penting:** proyek data science selalu dimulai dari **pertanyaan bisnis**, bukan dari algoritma. Algoritma hanyalah alat untuk menjawab pertanyaan.
@@ -89,7 +89,8 @@ Tahapan ini **tidak selalu lurus**. Contoh nyata di proyek ini: saat EDA ditemuk
 ├── notebook.ipynb                ← seluruh proses data science (sudah dijalankan)
 ├── app.py                        ← aplikasi Streamlit
 ├── data.csv                      ← dataset asli (pemisah ';')
-├── sample_students.csv           ← 30 mahasiswa dari data uji untuk demo prediksi batch
+├── data_enrolled.csv             ← 794 mahasiswa Enrolled (data prediksi) untuk fitur prediksi batch
+├── hasil_prediksi_enrolled.csv   ← hasil prediksi risiko dropout mahasiswa Enrolled
 ├── metabase.db.mv.db             ← "otak" Metabase: berisi definisi dashboard, pertanyaan, akun
 ├── andi_arif_abdillah-dashboard.png ← screenshot dashboard
 ├── requirements.txt              ← daftar library + versi (dipakai Streamlit Cloud)
@@ -102,13 +103,13 @@ Ini ringkasan — detailnya ada di modul-modul berikutnya. Usahakan Anda bisa me
 
 | Keputusan | Alasan singkat | Modul |
 |---|---|---|
-| Target biner: Dropout vs Tidak Dropout | Pertanyaan bisnisnya "siapa yang akan dropout?", bukan "lulus tepat waktu atau tidak" | 5 |
-| Pakai 19 dari 36 fitur | Performa setara (F1 0,795 vs 0,795), lebih sederhana, praktis diinput di aplikasi | 5 |
+| Target biner: **Dropout (1) vs Graduate (0)**; Enrolled dipisahkan sebagai data prediksi | Status akhir Enrolled belum diketahui, jadi label 0 untuk mereka membuat target ambigu (alasan versi pertama ditolak reviewer) | 5 |
+| Pakai 19 dari 36 fitur | Performa setara (F1 0,880 vs 0,878), lebih sederhana, praktis diinput di aplikasi | 5 |
 | `Course` & `Application_mode` di-one-hot | Kodenya label, bukan angka yang punya urutan | 3, 5 |
 | `class_weight="balanced"` | Kelas tidak seimbang (32% vs 68%) | 6 |
 | Metrik utama F1 & Recall, bukan akurasi | Melewatkan mahasiswa berisiko lebih mahal daripada salah memberi peringatan | 7 |
 | Memilih model berdasarkan **CV F1**, bukan skor data uji | Agar pemilihan model tidak "mengintip" data uji | 7 |
-| Logistic Regression terpilih | CV F1 tertinggi (0,793), recall tertinggi, mudah dijelaskan | 6, 7 |
+| Logistic Regression terpilih | Ketiga model setara secara statistik (aturan 1 standar deviasi CV); LR paling sederhana, CV recall tertinggi, mudah dijelaskan | 6, 7 |
 | Threshold 0,5 + 3 level risiko | Sederhana; level Sedang menjembatani ketidakpastian | 7, 8 |
 | Preprocessing dibungkus dalam `Pipeline` | Mencegah data leakage & aplikasi cukup memberi data mentah | 5, 8 |
 | Dashboard pakai SQL native + filter | Fleksibel, setiap grafik bisa difilter per prodi/gender/waktu kuliah/beasiswa | 9 |
